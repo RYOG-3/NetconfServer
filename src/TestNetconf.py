@@ -39,9 +39,8 @@ xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
 """
 
 # connect to netconf agent
-m = manager.connect(host='172.16.62.151', port=830, username='cisco',
-                    password='cisco', hostkey_verify=False,
-                    device_params={'name': 'iosxe'})
+m = manager.connect(host='172.16.0.100', port=830, username='ryo',
+                    password='cisco', hostkey_verify=False)
 
 # response = m.get_config(source='running', filter=payload)
 print('######################################################################')
