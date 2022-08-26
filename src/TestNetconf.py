@@ -1,56 +1,45 @@
-#!/usr/bin/env python
-
 from ncclient import manager
-from xml.dom import minidom
-import lxml.etree as ET
 import xmltodict
+import xml.dom.minidom
 
-payload = """
-<config xmlns:xc="urn:ietf:params:xml:ns:netconf:base:1.0"
-xmlns="urn:ietf:params:xml:ns:netconf:base:1.0">
-  <native xmlns="http://cisco.com/ns/yang/Cisco-IOS-XE-native">
-    <ip>
-      <route>
-        <ip-route-interface-forwarding-list>
-          <prefix>1.1.1.1</prefix>
-          <mask>255.255.255.255</mask>
-          <fwd-list>
-            <fwd>Null0</fwd>
-          </fwd-list>
-        </ip-route-interface-forwarding-list>
-        <ip-route-interface-forwarding-list>
-          <prefix>1.1.1.2</prefix>
-          <mask>255.255.255.255</mask>
-          <fwd-list>
-            <fwd>Null0</fwd>
-          </fwd-list>
-        </ip-route-interface-forwarding-list>
-        <ip-route-interface-forwarding-list>
-          <prefix>1.1.1.3</prefix>
-          <mask>255.255.255.255</mask>
-          <fwd-list>
-            <fwd>Null0</fwd>
-          </fwd-list>
-        </ip-route-interface-forwarding-list>
-      </route>
-    </ip>
-</native>
-</config>
+
+# Create an XML filter for targeted NETCONF queries
+netconf_filter = """
+<filter>
+  <interfaces xmlns="urn:ietf:params:xml:ns:yang:ietf-interfaces">
+    <interface></interface>
+  </interfaces>
+</filter>"""
+
+
+with manager.connect(
+        host="192.168.11.100",
+        port="22",
+        username="ryo",
+        password="pass",
+        manager_params={"timeout": 50},
+        hostkey_verify=False,
+        ) as m:
+
+    netconf_reply = m.get_config(source = 'running', filter = netconf_filter)
+    
+    print(netconf_reply)
+    """
+    print(xml.dom.minidom.parseString(netconf_reply.xml).toprettyxml())
+
+
+# Parse the returned XML to an Ordered Dictionary
+netconf_data = xmltodict.parse(netconf_reply.xml)["rpc-reply"]["data"]
+
+
+# Create a list of interfaces
+interfaces = netconf_data["interfaces"]["interface"]
+
+
+for interface in interfaces:
+    print("Interface {} enabled status is {}".format(
+            interface["name"],
+            interface["enabled"]
+            )
+        )
 """
-
-# connect to netconf agent
-m = manager.connect(host='172.16.0.100', port=830, username='ryo',
-                    password='cisco', hostkey_verify=False)
-
-# response = m.get_config(source='running', filter=payload)
-print('######################################################################')
-print('### XML')
-print('######################################################################')
-response = m.edit_config(target='running', config=payload).xml
-print(response)
-
-print('######################################################################')
-print('### XML Formatstring')
-print('######################################################################')
-data = ET.fromstring(response)
-print(ET.tostring(data, pretty_print=True))
